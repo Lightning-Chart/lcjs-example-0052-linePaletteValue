@@ -13,6 +13,7 @@ const {
     regularColorSteps,
     emptyLine,
     AxisTickStrategies,
+    emptyFill,
     Themes,
 } = lcjs
 
@@ -30,7 +31,10 @@ const axisX = chart.getDefaultAxisX()
 const axisY = chart.getDefaultAxisY()
 chart.getDefaultAxes().forEach((axis) => axis.setTickStrategy(AxisTickStrategies.Empty).setStrokeStyle(emptyLine))
 
-const lineSeries = chart.addLineSeries({ individualLookupValuesEnabled: true }).setStrokeStyle((stroke) => stroke.setThickness(10))
+const lineSeries = chart
+    .addPointLineAreaSeries({ lookupValues: true, dataPattern: null })
+    .setStrokeStyle((stroke) => stroke.setThickness(10))
+    .setPointFillStyle(emptyFill)
 
 const labelStart = chart.addUIElement(UIElementBuilders.TextBox, { x: axisX, y: axisY }).setVisible(false)
 
@@ -93,8 +97,10 @@ const displayDataSource = async (sourceName) => {
     lineSeries
         .clear()
         .setName(sourceName)
-        .add(data)
+        .appendJSON(data, { x: 'x', y: 'y', lookupValue: 'value' })
         .setStrokeStyle((stroke) => stroke.setFillStyle(new PalettedFill({ lut: dataSource.lut })))
+
+    console.log(lineSeries.readBack())
 
     const start = data[0]
     labelStart.setVisible(true).setPosition(start).setOrigin(UIOrigins.CenterBottom).setMargin(10).setText('START')
