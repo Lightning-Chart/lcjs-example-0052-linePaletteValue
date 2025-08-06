@@ -24,17 +24,19 @@ const chart = lightningChart({
         theme: Themes[new URLSearchParams(window.location.search).get('theme') || 'darkGold'] || undefined,
     })
     .setTitle('Loading example data ...')
-    .setCursor((cursor) => cursor.setTickMarkerXVisible(false).setTickMarkerYVisible(false))
+    .setCursor((cursor) =>
+        cursor
+            .setTickMarkerXVisible(false)
+            .setTickMarkerYVisible(false)
+            .setPointMarker((pm) => pm.setSize({ x: 15, y: 15 })),
+    )
 
 const theme = chart.getTheme()
 const axisX = chart.getDefaultAxisX()
 const axisY = chart.getDefaultAxisY()
 chart.getDefaultAxes().forEach((axis) => axis.setTickStrategy(AxisTickStrategies.Empty).setStrokeStyle(emptyLine))
 
-const lineSeries = chart
-    .addPointLineAreaSeries({ lookupValues: true, dataPattern: null })
-    .setStrokeStyle((stroke) => stroke.setThickness(10))
-    .setPointFillStyle(emptyFill)
+const lineSeries = chart.addLineSeries().setStrokeStyle((stroke) => stroke.setThickness(10))
 
 const labelStart = chart.addUIElement(UIElementBuilders.TextBox, { x: axisX, y: axisY }).setVisible(false)
 
@@ -75,14 +77,7 @@ const dataSources = [
     },
 ]
 
-let legend
 const displayDataSource = async (sourceName) => {
-    // CLeanup previously displayed data source
-    if (legend) {
-        legend.dispose()
-        legend = undefined
-    }
-
     const dataSource = dataSources.find((item) => item.name === sourceName)
     let data = dataSource.data
     if (!data) {
@@ -97,17 +92,13 @@ const displayDataSource = async (sourceName) => {
     lineSeries
         .clear()
         .setName(sourceName)
-        .appendJSON(data, { x: 'x', y: 'y', lookupValue: 'value' })
+        .appendJSON(data)
         .setStrokeStyle((stroke) => stroke.setFillStyle(new PalettedFill({ lut: dataSource.lut })))
-
-    console.log(lineSeries.readBack())
 
     const start = data[0]
     labelStart.setVisible(true).setPosition(start).setOrigin(UIOrigins.CenterBottom).setMargin(10).setText('START')
 
     chart.setTitle(`Racecar ${sourceName} progression during 1 lap`)
-
-    legend = chart.addLegendBox().add(chart)
 }
 displayDataSource('Speed')
 
